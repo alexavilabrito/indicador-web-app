@@ -1,0 +1,11 @@
+framework: react
+framework_version: 1.4.0
+target: codex
+target_version: 1.0.0
+artifacts:
+- path: .codex/skills/3it/rules/react.md
+  checksum: 26188d0d136a83e2077c738c3397d9778bd87fd1467eac4b23b8dbf9d82208b5
+- path: .codex/skills/3it/skills/react.md
+  checksum: dfbdf854b3f1a614c7b4a9c4afcbcf49dac2ca21cf41d228f76dfa40383c320a
+- path: .codex/skills/3it/commands/react.md
+  checksum: 7b9755724033174cda5907cf0f009469f255ff0d9cf545259c0c4238e805b710

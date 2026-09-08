@@ -1,0 +1,332 @@
+openapi: 3.1.0
+info:
+  title: Indicator Detail BFF Contract
+  version: 0.1.0
+  description: >
+    Contract for retrieving one supported Chilean economic indicator detail for
+    the user-facing detail view.
+paths:
+  /indicators/{code}/detail:
+    get:
+      summary: Get indicator detail
+      description: >
+        Returns canonical indicator detail data, recent chronological series,
+        variation against the previous observation when available, provenance,
+        freshness, and a user-visible state.
+      parameters:
+        - name: code
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/IndicatorCode"
+      responses:
+        "200":
+          description: Indicator detail state was resolved.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IndicatorDetailResponse"
+              examples:
+                success:
+                  value:
+                    state: success
+                    indicator:
+                      code: uf
+                      name: Unidad de Fomento
+                      unit:
+                        label: Pesos
+                        displaySymbol: CLP
+                        locale: es-CL
+                      unitCategory: unit_of_account
+                      source:
+                        name: mindicador.cl
+                        url: https://mindicador.cl/
+                        retrievedAt: "2026-09-07T21:30:00Z"
+                      isSupported: true
+                    latestObservation:
+                      indicatorCode: uf
+                      effectiveDate: "2026-09-07"
+                      value: "39250.45"
+                      unit:
+                        label: Pesos
+                        displaySymbol: CLP
+                        locale: es-CL
+                      source:
+                        name: mindicador.cl
+                        url: https://mindicador.cl/
+                        retrievedAt: "2026-09-07T21:30:00Z"
+                      quality: valid
+                    variation:
+                      status: available
+                      absolute: "12.34"
+                      percentage: "0.0314"
+                      direction: up
+                      baselineDate: "2026-09-06"
+                      latestDate: "2026-09-07"
+                    recentSeries:
+                      - indicatorCode: uf
+                        effectiveDate: "2026-09-06"
+                        value: "39238.11"
+                        unit:
+                          label: Pesos
+                          displaySymbol: CLP
+                          locale: es-CL
+                        source:
+                          name: mindicador.cl
+                          url: https://mindicador.cl/
+                          retrievedAt: "2026-09-07T21:30:00Z"
+                        quality: valid
+                      - indicatorCode: uf
+                        effectiveDate: "2026-09-07"
+                        value: "39250.45"
+                        unit:
+                          label: Pesos
+                          displaySymbol: CLP
+                          locale: es-CL
+                        source:
+                          name: mindicador.cl
+                          url: https://mindicador.cl/
+                          retrievedAt: "2026-09-07T21:30:00Z"
+                        quality: valid
+                    freshness:
+                      status: fresh
+                    message: null
+                invalidIndicator:
+                  value:
+                    state: invalid_indicator
+                    indicator: null
+                    latestObservation: null
+                    variation:
+                      status: invalid_data
+                    recentSeries: []
+                    freshness:
+                      status: unknown
+                    message: "El indicador solicitado no esta soportado."
+        "429":
+          description: Request was rejected because usage limits were exceeded.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Unexpected service error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+components:
+  schemas:
+    IndicatorCode:
+      type: string
+      enum:
+        - uf
+        - ivp
+        - dolar
+        - dolar_intercambio
+        - euro
+        - ipc
+        - utm
+        - imacec
+        - tpm
+        - libra_cobre
+        - tasa_desempleo
+        - bitcoin
+    UnitCategory:
+      type: string
+      enum:
+        - money
+        - percentage
+        - unit_of_account
+        - commodity
+        - cryptoasset
+    IndicatorUnit:
+      type: object
+      required:
+        - label
+        - locale
+      properties:
+        label:
+          type: string
+          enum:
+            - Pesos
+            - Porcentaje
+            - Dolar
+        displaySymbol:
+          type: string
+        locale:
+          type: string
+          const: es-CL
+    SourceInfo:
+      type: object
+      required:
+        - name
+        - url
+        - retrievedAt
+      properties:
+        name:
+          type: string
+          const: mindicador.cl
+        url:
+          type: string
+          format: uri
+        retrievedAt:
+          type: string
+          format: date-time
+    Indicator:
+      type: object
+      required:
+        - code
+        - name
+        - unit
+        - unitCategory
+        - source
+        - isSupported
+      properties:
+        code:
+          $ref: "#/components/schemas/IndicatorCode"
+        name:
+          type: string
+          minLength: 1
+        unit:
+          $ref: "#/components/schemas/IndicatorUnit"
+        unitCategory:
+          $ref: "#/components/schemas/UnitCategory"
+        source:
+          $ref: "#/components/schemas/SourceInfo"
+        isSupported:
+          type: boolean
+    ObservationQuality:
+      type: string
+      enum:
+        - valid
+        - invalid_value
+        - missing_value
+        - incomplete_payload
+    IndicatorObservation:
+      type: object
+      required:
+        - indicatorCode
+        - effectiveDate
+        - value
+        - unit
+        - source
+        - quality
+      properties:
+        indicatorCode:
+          $ref: "#/components/schemas/IndicatorCode"
+        effectiveDate:
+          type: string
+          format: date
+        value:
+          type: string
+          pattern: "^-?[0-9]+(\\.[0-9]+)?$"
+        unit:
+          $ref: "#/components/schemas/IndicatorUnit"
+        source:
+          $ref: "#/components/schemas/SourceInfo"
+        quality:
+          $ref: "#/components/schemas/ObservationQuality"
+    Variation:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum:
+            - available
+            - not_enough_data
+            - invalid_data
+        absolute:
+          type: string
+          pattern: "^-?[0-9]+(\\.[0-9]+)?$"
+        percentage:
+          type: string
+          pattern: "^-?[0-9]+(\\.[0-9]+)?$"
+        direction:
+          type: string
+          enum:
+            - up
+            - down
+            - unchanged
+        baselineDate:
+          type: string
+          format: date
+        latestDate:
+          type: string
+          format: date
+    Freshness:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum:
+            - fresh
+            - stale
+            - unknown
+        lastSuccessfulRefreshAt:
+          type: string
+          format: date-time
+        ageLabel:
+          type: string
+        reason:
+          type: string
+          enum:
+            - provider_unavailable
+            - timeout
+            - incomplete_payload
+            - policy_expired
+    DetailState:
+      type: string
+      enum:
+        - loading
+        - success
+        - no_series
+        - invalid_indicator
+        - stale_data
+        - service_unavailable
+    IndicatorDetailResponse:
+      type: object
+      required:
+        - state
+        - indicator
+        - latestObservation
+        - variation
+        - recentSeries
+        - freshness
+        - message
+      properties:
+        state:
+          $ref: "#/components/schemas/DetailState"
+        indicator:
+          anyOf:
+            - $ref: "#/components/schemas/Indicator"
+            - type: "null"
+        latestObservation:
+          anyOf:
+            - $ref: "#/components/schemas/IndicatorObservation"
+            - type: "null"
+        variation:
+          $ref: "#/components/schemas/Variation"
+        recentSeries:
+          type: array
+          items:
+            $ref: "#/components/schemas/IndicatorObservation"
+        freshness:
+          $ref: "#/components/schemas/Freshness"
+        message:
+          anyOf:
+            - type: string
+            - type: "null"
+    ErrorResponse:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+        message:
+          type: string

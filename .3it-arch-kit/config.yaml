@@ -1,0 +1,2 @@
+default_framework: spring-cloud
+default_target: codex
